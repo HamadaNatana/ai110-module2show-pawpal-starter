@@ -19,8 +19,9 @@ There should be approximately 3 classes: Task,Pet, and user. Each of these class
 **b. Design changes**
 
 - Did your design change during implementation?
+Yes
 - If yes, describe at least one change and why you made it.
-
+I added a owner to schedule link so that an owner can see the schedule specifically madde for him
 ---
 
 ## 2. Scheduling Logic and Tradeoffs

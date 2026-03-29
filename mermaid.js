@@ -22,6 +22,7 @@ classDiagram
         +List~Pet~ pets
         +String task_type
         +String importance
+        +DateTime due_date
         +Boolean is_done
         +add_task()
         +mark_done()
