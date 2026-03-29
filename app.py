@@ -1,4 +1,12 @@
 import streamlit as st
+from pawpal_system import Owner, Pet, Task, Schedule
+
+if "owner" not in st.session_state:
+    st.session_state.owner = None
+if "schedule" not in st.session_state:
+    st.session_state.schedule = None
+if "tasks" not in st.session_state:
+    st.session_state.tasks = []
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 
@@ -42,29 +50,48 @@ st.subheader("Quick Demo Inputs (UI only)")
 owner_name = st.text_input("Owner name", value="Jordan")
 pet_name = st.text_input("Pet name", value="Mochi")
 species = st.selectbox("Species", ["dog", "cat", "other"])
+if st.button("Create owner and pet"):
+    owner = Owner(name=owner_name)
+    pet = Pet(name=pet_name, type_breed=species, owner=owner)
+    owner.add_pet(pet)
+    st.session_state.owner = owner
+
+if st.session_state.owner:
+    st.success(f"Owner: {st.session_state.owner.name}")
+    for p in st.session_state.owner.pets_owned:
+        st.write(f"- **{p.name}** ({p.type_breed})")
 
 st.markdown("### Tasks")
 st.caption("Add a few tasks. In your final version, these should feed into your scheduler.")
 
-if "tasks" not in st.session_state:
-    st.session_state.tasks = []
+if st.session_state.owner is None or not st.session_state.owner.pets_owned:
+    st.info("Create an owner and pet above before adding tasks.")
+    st.stop()
 
-col1, col2, col3 = st.columns(3)
+pet_names = [p.name for p in st.session_state.owner.pets_owned]
+
+col1, col2 = st.columns(2)
 with col1:
     task_title = st.text_input("Task title", value="Morning walk")
 with col2:
-    duration = st.number_input("Duration (minutes)", min_value=1, max_value=240, value=20)
-with col3:
     priority = st.selectbox("Priority", ["low", "medium", "high"], index=2)
 
+selected_pet = st.selectbox("Assign to pet", pet_names)
+
 if st.button("Add task"):
-    st.session_state.tasks.append(
-        {"title": task_title, "duration_minutes": int(duration), "priority": priority}
-    )
+    if task_title and selected_pet:
+        task = Task(task_type=task_title, importance=priority)
+        pet = next(p for p in st.session_state.owner.pets_owned if p.name == selected_pet)
+        task.add_pet(pet)
+        st.session_state.tasks.append(task)
+        st.rerun()
 
 if st.session_state.tasks:
-    st.write("Current tasks:")
-    st.table(st.session_state.tasks)
+    st.write("**Current tasks:**")
+    for t in st.session_state.tasks:
+        pet_list = ", ".join(p.name for p in t.pets)
+        status = "Done" if t.is_done else "Pending"
+        st.write(f"- **{t.task_type}** — {t.importance} priority, pets: {pet_list} [{status}]")
 else:
     st.info("No tasks yet. Add one above.")
 
@@ -74,15 +101,31 @@ st.subheader("Build Schedule")
 st.caption("This button should call your scheduling logic once you implement it.")
 
 if st.button("Generate schedule"):
-    st.warning(
-        "Not implemented yet. Next step: create your scheduling logic (classes/functions) and call it here."
-    )
-    st.markdown(
-        """
-Suggested approach:
-1. Design your UML (draft).
-2. Create class stubs (no logic).
-3. Implement scheduling behavior.
-4. Connect your scheduler here and display results.
-"""
-    )
+    pending = [t for t in st.session_state.tasks if not t.is_done]
+    if not pending:
+        st.warning("No pending tasks to schedule.")
+    else:
+        priority_order = {"high": 0, "medium": 1, "low": 2}
+        sorted_tasks = sorted(pending, key=lambda t: priority_order.get(t.importance, 3))
+        schedule = Schedule(owner=st.session_state.owner, tasks=sorted_tasks)
+        st.session_state.schedule = schedule
+
+        st.write("**Scheduled plan (sorted by priority):**")
+        for i, t in enumerate(schedule.generate_schedule(), start=1):
+            pet_list = ", ".join(p.name for p in t.pets)
+            st.write(f"{i}. **{t.task_type}** — {t.importance} priority, pets: {pet_list}")
+
+st.divider()
+
+st.subheader("Mark Tasks Complete")
+
+pending = [t for t in st.session_state.tasks if not t.is_done]
+if pending:
+    task_labels = [f"{t.task_type} ({t.importance}) — {', '.join(p.name for p in t.pets)}" for t in pending]
+    selected_label = st.selectbox("Select a task to complete", task_labels)
+    if st.button("Mark Done"):
+        idx = task_labels.index(selected_label)
+        pending[idx].mark_done()
+        st.rerun()
+else:
+    st.info("No pending tasks.")
