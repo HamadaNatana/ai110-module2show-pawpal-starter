@@ -5,7 +5,16 @@
 **a. Initial design**
 
 - Briefly describe your initial UML design.
+The first idea of the UML design should have the following: 
+1) A way for the user to view the tasks to be done
+2) Adding a certain task for a certain pet
+3) Marking a task as completed
 - What classes did you include, and what responsibilities did you assign to each?
+There should be approximately 3 classes: Task,Pet, and user. Each of these classes is responsible for the following:
+- Task: manage the tasks per pet and checks if it is need to be completed or not
+- Pet: assigned an owner and task to be completed. 
+- Owner: be assigned a number of pets to be owned and what needs to be done, time availability to leave pets, prefrences,etc... 
+- Schedule: keeps tasks organized by seeing which tasks need to be done
 
 **b. Design changes**
 
