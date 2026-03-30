@@ -46,13 +46,16 @@ It is better since trying to use set intersection as it leads to an error, or wo
 **a. How you used AI**
 
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
+I gave both claude and copilot detailed prompts highlighting the main goal, how it can be achieved, and what can be avoided
 - What kinds of prompts or questions were most helpful?
+The prompts where there were more details on what is needed to be done, it is more accurate
 
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
+AI wanted to write a test where it proves itself correct even if it does it incorrectly
 - How did you evaluate or verify what the AI suggested?
-
+By skimming over the code and running it to verify the outcome
 ---
 
 ## 4. Testing and Verification
@@ -60,13 +63,16 @@ It is better since trying to use set intersection as it leads to an error, or wo
 **a. What you tested**
 
 - What behaviors did you test?
+The recurring tasks for daily, weekly, and monthly tasks and conflicting time slots for tasks
 - Why were these tests important?
+To verify that the code works as desired. For the recurrence, we had to check if the task is assigned again after the desired time is over. And the conflicting checks if the confliction occurs only between the same pet in the overlapping time slots
 
 **b. Confidence**
 
 - How confident are you that your scheduler works correctly?
+Somewhat confident.
 - What edge cases would you test next if you had more time?
-
+If the confliction of tasks seem to be repeated tasks
 ---
 
 ## 5. Reflection
@@ -74,11 +80,12 @@ It is better since trying to use set intersection as it leads to an error, or wo
 **a. What went well**
 
 - What part of this project are you most satisfied with?
-
+That i have a sorting and filtering algorithm ffor the schedule
 **b. What you would improve**
 
 - If you had another iteration, what would you improve or redesign?
-
+I would redesign the scheduling feature to make it more pinpoint accuate
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+That AI is not a pure genius, sometimes it needs very handguided prompts and rejections to get the right answer

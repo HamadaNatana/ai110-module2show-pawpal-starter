@@ -58,9 +58,7 @@ if st.button("Create owner and pet"):
     st.session_state.owner = owner
 
 if st.session_state.owner:
-    st.success(f"Owner: {st.session_state.owner.name}")
-    for p in st.session_state.owner.pets_owned:
-        st.write(f"- **{p.name}** ({p.type_breed})")
+    st.success(f"Owner: {st.session_state.owner.name} and pet: {st.session_state.owner.pets_owned[0].name} ({st.session_state.owner.pets_owned[0].type_breed}) created!")
 
 st.markdown("### Tasks")
 st.caption("Add a few tasks. In your final version, these should feed into your scheduler.")
@@ -83,39 +81,41 @@ with col3:
 with col4:
     recurrence = st.selectbox("Recurrence", [None, "daily", "weekly", "monthly"])
 
+col5, col6 = st.columns(2)
+with col5:
+    task_date = st.date_input("Scheduled date", value=datetime.date.today())
+with col6:
+    task_time = st.time_input("Scheduled time", value=datetime.time(9, 0))
+
 selected_pet = st.selectbox("Assign to pet", pet_names)
 
 if st.button("Add task"):
     if task_title and selected_pet:
-        task = Task(task_type=task_title, importance=priority, duration_minutes=duration, recurrence=recurrence)
+        scheduled_dt = datetime.datetime.combine(task_date, task_time)
+        task = Task(task_type=task_title, importance=priority, duration_minutes=duration, recurrence=recurrence, due_date=scheduled_dt)
         pet = next(p for p in st.session_state.owner.pets_owned if p.name == selected_pet)
         task.add_pet(pet)
         st.session_state.tasks.append(task)
-        st.rerun()
-
-if st.session_state.tasks:
-    st.write("**Current tasks:**")
-    for t in st.session_state.tasks:
-        pet_list = ", ".join(p.name for p in t.pets)
-        status = "Done" if t.is_done else "Pending"
-        recurrence_info = f" — {t.recurrence}" if t.recurrence else ""
-        st.write(f"- **{t.task_type}** ({t.duration_minutes} min) — {t.importance} priority, pets: {pet_list} [{status}]{recurrence_info}")
-else:
-    st.info("No tasks yet. Add one above.")
+        st.success(f"Task '{task_title}' added for {selected_pet}!")
 
 st.divider()
 
 st.subheader("Build Schedule")
 st.caption("This button should call your scheduling logic once you implement it.")
 
+priority_filter = st.selectbox("Filter by priority", ["All", "high", "medium", "low"])
+
 if st.button("Generate schedule"):
     pending = [t for t in st.session_state.tasks if not t.is_done]
     if not pending:
         st.warning("No pending tasks to schedule.")
     else:
-        priority_order = {"high": 0, "medium": 1, "low": 2}
-        sorted_tasks = sorted(pending, key=lambda t: priority_order.get(t.importance, 3))
-        schedule = Schedule(owner=st.session_state.owner, tasks=sorted_tasks)
+        schedule = Schedule(owner=st.session_state.owner, tasks=list(pending))
+        schedule.sort_by_time()
+
+        if priority_filter != "All":
+            schedule.filter_by_priority(priority_filter)
+
         st.session_state.schedule = schedule
 
         # Check for and display conflicts
@@ -126,12 +126,27 @@ if st.button("Generate schedule"):
         else:
             st.success("✓ No scheduling conflicts detected!")
 
-        st.write("**Scheduled plan (sorted by priority):**")
-        for i, t in enumerate(schedule.generate_schedule(), start=1):
-            pet_list = ", ".join(p.name for p in t.pets)
-            start_time = t.due_date.strftime("%H:%M") if hasattr(t.due_date, 'strftime') else "No time"
-            end_time = (t.due_date + datetime.timedelta(minutes=t.duration_minutes)).strftime("%H:%M") if hasattr(t.due_date, 'strftime') else "N/A"
-            st.write(f"{i}. **{t.task_type}** ({start_time}–{end_time}) — {t.importance} priority, pets: {pet_list}")
+        scheduled_tasks = schedule.generate_schedule()
+        if not scheduled_tasks:
+            st.info(f"No {priority_filter} priority tasks found.")
+        else:
+            st.write("**Scheduled plan (sorted by time):**")
+            table_data = []
+            for t in scheduled_tasks:
+                date_str = t.due_date.strftime("%Y-%m-%d")
+                start_time = t.due_date.strftime("%H:%M")
+                end_time = (t.due_date + datetime.timedelta(minutes=t.duration_minutes)).strftime("%H:%M")
+                table_data.append({
+                    "Task": t.task_type,
+                    "Date": date_str,
+                    "Start": start_time,
+                    "End": end_time,
+                    "Duration (min)": t.duration_minutes,
+                    "Priority": t.importance.capitalize(),
+                    "Pets": ", ".join(p.name for p in t.pets),
+                    "Recurrence": t.recurrence if t.recurrence else "—",
+                })
+            st.table(table_data)
 
 st.divider()
 
