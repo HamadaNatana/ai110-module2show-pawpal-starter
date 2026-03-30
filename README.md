@@ -32,6 +32,26 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+### Smarter Scheduling
+
+Your scheduler includes these intelligent features:
+
+**1. Recurring Tasks**
+- Tasks can be marked as `daily`, `weekly`, or `monthly`
+- When completed, recurring tasks automatically reset to their next occurrence
+- Handles edge cases like year boundaries (Dec → Jan for monthly tasks)
+
+**2. Conflict Detection**
+- Each task has a `duration_minutes` field (default: 30 min)
+- The scheduler detects when two tasks overlap in time for the same pet
+- Conflicts are surfaced as warnings in the schedule, without crashing the app
+- Useful for catching scheduling mistakes before executing the plan
+
+**3. Real-Time Scheduling**
+- Tasks can specify their exact time and duration
+- Schedule generation shows task start/end times (e.g., `Walk (09:00–09:30)`)
+- UI allows users to set task duration and recurrence when creating tasks
+
 ### Suggested workflow
 
 1. Read the scenario carefully and identify requirements and edge cases.

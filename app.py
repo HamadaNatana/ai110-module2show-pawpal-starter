@@ -1,4 +1,5 @@
 import streamlit as st
+import datetime
 from pawpal_system import Owner, Pet, Task, Schedule
 
 if "owner" not in st.session_state:
@@ -76,11 +77,17 @@ with col1:
 with col2:
     priority = st.selectbox("Priority", ["low", "medium", "high"], index=2)
 
+col3, col4 = st.columns(2)
+with col3:
+    duration = st.number_input("Duration (minutes)", min_value=5, max_value=480, value=30, step=5)
+with col4:
+    recurrence = st.selectbox("Recurrence", [None, "daily", "weekly", "monthly"])
+
 selected_pet = st.selectbox("Assign to pet", pet_names)
 
 if st.button("Add task"):
     if task_title and selected_pet:
-        task = Task(task_type=task_title, importance=priority)
+        task = Task(task_type=task_title, importance=priority, duration_minutes=duration, recurrence=recurrence)
         pet = next(p for p in st.session_state.owner.pets_owned if p.name == selected_pet)
         task.add_pet(pet)
         st.session_state.tasks.append(task)
@@ -91,7 +98,8 @@ if st.session_state.tasks:
     for t in st.session_state.tasks:
         pet_list = ", ".join(p.name for p in t.pets)
         status = "Done" if t.is_done else "Pending"
-        st.write(f"- **{t.task_type}** — {t.importance} priority, pets: {pet_list} [{status}]")
+        recurrence_info = f" — {t.recurrence}" if t.recurrence else ""
+        st.write(f"- **{t.task_type}** ({t.duration_minutes} min) — {t.importance} priority, pets: {pet_list} [{status}]{recurrence_info}")
 else:
     st.info("No tasks yet. Add one above.")
 
@@ -110,10 +118,20 @@ if st.button("Generate schedule"):
         schedule = Schedule(owner=st.session_state.owner, tasks=sorted_tasks)
         st.session_state.schedule = schedule
 
+        # Check for and display conflicts
+        conflicts = schedule.detect_conflicts()
+        if conflicts:
+            for warning in schedule.get_conflict_warnings():
+                st.warning(warning)
+        else:
+            st.success("✓ No scheduling conflicts detected!")
+
         st.write("**Scheduled plan (sorted by priority):**")
         for i, t in enumerate(schedule.generate_schedule(), start=1):
             pet_list = ", ".join(p.name for p in t.pets)
-            st.write(f"{i}. **{t.task_type}** — {t.importance} priority, pets: {pet_list}")
+            start_time = t.due_date.strftime("%H:%M") if hasattr(t.due_date, 'strftime') else "No time"
+            end_time = (t.due_date + datetime.timedelta(minutes=t.duration_minutes)).strftime("%H:%M") if hasattr(t.due_date, 'strftime') else "N/A"
+            st.write(f"{i}. **{t.task_type}** ({start_time}–{end_time}) — {t.importance} priority, pets: {pet_list}")
 
 st.divider()
 

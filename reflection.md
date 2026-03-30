@@ -29,13 +29,16 @@ I added a owner to schedule link so that an owner can see the schedule specifica
 **a. Constraints and priorities**
 
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
+The scheduler considers priority and time
 - How did you decide which constraints mattered most?
+I decided that priority matters first since these require the most attention
 
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+The scheduler is more readable in terms of checking the conflicts using list comprehension, yet it takes worst case O(n^2)
 - Why is that tradeoff reasonable for this scenario?
-
+It is better since trying to use set intersection as it leads to an error, or would require a freeze on the pet class causing more complications
 ---
 
 ## 3. AI Collaboration
